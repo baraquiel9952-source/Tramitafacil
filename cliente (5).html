@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trámites Fiscales - WhatsApp</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            background: white;
+        }
+
+        .chat-box {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 500px;
+            background: #fff;
+            border-right: 1px solid #e0e0e0;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .header .status {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #f0f0f0;
+        }
+
+        .message {
+            display: flex;
+            gap: 8px;
+            max-width: 85%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+        }
+
+        .bubble {
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            line-height: 1.4;
+            font-size: 14px;
+        }
+
+        .message.user .bubble {
+            background: #25D366;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .message.ai .bubble {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .option-button {
+            display: block;
+            width: 100%;
+            background: none;
+            border: 1px solid #25D366;
+            color: #25D366;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-top: 8px;
+            transition: all 0.2s;
+            text-align: left;
+            font-family: inherit;
+        }
+
+        .option-button:hover {
+            background: #25D36620;
+        }
+
+        .option-button:active {
+            transform: scale(0.98);
+        }
+
+        .form-section {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 6px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 2px #25D36630;
+        }
+
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 2px #25D36630;
+        }
+
+        .payment-section {
+            background: linear-gradient(135deg, #fff8e1 0%, #fffde7 100%);
+            border: 2px solid #fbc02d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .payment-title {
+            font-weight: 600;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .payment-info {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .payment-info div {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .payment-info .label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .payment-info .value {
+            color: #333;
+            font-weight: 600;
+            font-family: monospace;
+        }
+
+        .clabe {
+            background: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: bold;
+            color: #25D366;
+            text-align: center;
+            font-size: 16px;
+            letter-spacing: 2px;
+            margin: 8px 0;
+        }
+
+        .upload-section {
+            border: 2px dashed #25D366;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f0f8f5;
+        }
+
+        .upload-section:hover {
+            background: #e8f7f2;
+        }
+
+        .upload-section input[type="file"] {
+            display: none;
+        }
+
+        .upload-section p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .typing {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            padding: 12px 16px;
+        }
+
+        .typing span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #999;
+            animation: bounce 1.4s infinite;
+        }
+
+        .typing span:nth-child(1) { animation-delay: 0s; }
+        .typing span:nth-child(2) { animation-delay: 0.2s; }
+        .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes bounce {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .input-area {
+            border-top: 1px solid #e0e0e0;
+            padding: 12px;
+            background: white;
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-area input {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 24px;
+            padding: 10px 16px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .input-area input:focus {
+            outline: none;
+            border-color: #25D366;
+        }
+
+        .input-area button {
+            background: #25D366;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+
+        .input-area button:hover {
+            background: #1fad54;
+        }
+
+        .success-message {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .error-message {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        .price-highlight {
+            font-weight: 700;
+            color: #25D366;
+            font-size: 18px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .button-group button {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .button-group button:hover {
+            background: #f5f5f5;
+        }
+
+        .button-group .confirm {
+            background: #25D366;
+            color: white;
+            border-color: #25D366;
+        }
+
+        .button-group .confirm:hover {
+            background: #1fad54;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .support-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 999;
+            transition: all 0.3s;
+            animation: pulse 2s infinite;
+        }
+
+        .support-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4); }
+            50% { box-shadow: 0 4px 20px rgba(37, 211, 102, 0.8); }
+        }
+
+        .support-tooltip {
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            background: white;
+            border: 2px solid #25D366;
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 13px;
+            color: #333;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 998;
+            display: none;
+            white-space: nowrap;
+            animation: slideUp 0.3s ease;
+        }
+
+        .support-tooltip.show {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .real-time-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #4caf50;
+            border-radius: 50%;
+            margin-right: 6px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .order-tracking {
+            background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+            border: 2px solid #2196F3;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .tracking-title {
+            font-weight: 600;
+            color: #2196F3;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .tracking-status {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .status-dot {
+            flex: 1;
+            text-align: center;
+        }
+
+        .dot {
+            width: 30px;
+            height: 30px;
+            margin: 0 auto 8px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+        }
+
+        .dot.completed {
+            background: #4caf50;
+        }
+
+        .dot.active {
+            background: #2196F3;
+            animation: pulse 1s infinite;
+        }
+
+        .dot-label {
+            font-size: 11px;
+            color: #666;
+            text-align: center;
+        }
+
+        .tracking-info {
+            background: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+
+        .progress-bar {
+            background: #f0f0f0;
+            border-radius: 8px;
+            height: 6px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #25D366 0%, #128C7E 100%);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .step-indicator .step {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .step-indicator .step.active {
+            color: #25D366;
+            font-weight: 600;
+        }
+
+        .step-indicator .step.completed {
+            color: #4caf50;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .step.active .step-number {
+            background: #25D366;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #4caf50;
+            color: white;
+        }
+
+        .order-summary {
+            background: linear-gradient(135deg, #f0f8f5 0%, #e8f7f2 100%);
+            border: 2px solid #25D366;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            color: #25D366;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #25D36630;
+            font-size: 13px;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+        }
+
+        .summary-item .label {
+            color: #666;
+        }
+
+        .summary-item .value {
+            font-weight: 600;
+            color: #333;
+            text-align: right;
+            word-break: break-all;
+        }
+
+        .download-receipt-btn {
+            display: inline-block;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #25D366;
+            color: #25D366;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-top: 12px;
+            transition: all 0.2s;
+        }
+
+        .download-receipt-btn:hover {
+            background: #25D36610;
+        }
+
+        .file-uploaded {
+            background: #e8f5e9;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-top: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #25D366;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: inline-block;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // ==================== CONFIGURACIÓN FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyC3K7vQXzDR5yNvH-9J8Q2mK4pL6M8nOp9",
+            authDomain: "tramitafacil-2925b.firebaseapp.com",
+            databaseURL: "https://tramitafacil-2925b-default-rtdb.firebaseio.com",
+            projectId: "tramitafacil-2925b",
+            storageBucket: "tramitafacil-2925b.appspot.com",
+            messagingSenderId: "328195372831",
+            appId: "1:328195372831:web:f2c3d4e5f6g7h8i9j0k1l"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        
+        console.log('✅ Firebase inicializado correctamente');
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-box">
+            <div class="header">
+                <div>
+                    <h1>📋 Trámites Fiscales IA</h1>
+                    <div class="status"><span class="real-time-indicator"></span>En línea</div>
+                </div>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div class="input-area">
+                <input type="text" id="input" placeholder="Escribe tu mensaje...">
+                <button onclick="sendMessage()">↗</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón de soporte flotante -->
+    <button class="support-button" onclick="toggleSupportTooltip()" title="¿Necesitas ayuda?">
+        📞
+    </button>
+    <div class="support-tooltip" id="supportTooltip">
+        📱 Soporte: <strong>+52 5647385519</strong>
+    </div>
+
+    <script>
+        let currentStep = 'inicio';
+        let selectedService = null;
+        let formData = {
+            rfc: '',
+            idcif: '',
+            curp: '',
+            phone: '',
+            paymentImage: null,
+            price: 0
+        };
+
+        function addMessage(text, isUser = false, isHTML = false) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            
+            if (isHTML) {
+                bubble.innerHTML = text;
+            } else {
+                bubble.textContent = text;
+            }
+            
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function showTyping() {
+            const messagesDiv = document.getElementById('messages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing';
+            typingDiv.id = 'typing';
+            typingDiv.innerHTML = '<span></span><span></span><span></span>';
+            messagesDiv.appendChild(typingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function removeTyping() {
+            const typing = document.getElementById('typing');
+            if (typing) typing.remove();
+        }
+
+        function initChat() {
+            addMessage('Hola 👋 Bienvenido a nuestro servicio de trámites digitales. Soy tu asistente IA especializado en documentos fiscales y actas de nacimiento.\n\n¿Qué necesitas hoy?', false, true);
+            const messagesDiv = document.getElementById('messages');
+            const lastBubble = messagesDiv.lastChild.querySelector('.bubble');
+            lastBubble.innerHTML += `
+                <button class="option-button" onclick="selectService('constancia')">📄 Constancia de Situación Fiscal - $60</button>
+                <button class="option-button" onclick="selectService('acta')">👶 Acta de Nacimiento - $45</button>
+            `;
+            currentStep = 'inicio';
+        }
+
+        function selectService(service) {
+            selectedService = service;
+            
+            if (service === 'constancia') {
+                addMessage('Necesito una Constancia de Situación Fiscal', true);
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        removeTyping();
+                        addMessage(
+                            'Perfecto 📄 La Constancia de Situación Fiscal permite verificar tu estatus ante el SAT.\n\nNecesito que proporciones:\n• RFC\n• ID o CIF\n\n¿Tienes estos documentos?',
+                            false,
+                            true
+                        );
+                        const messagesDiv = document.getElementById('messages');
+                        const lastBubble = messagesDiv.lastChild.querySelector('.bubble');
+                        lastBubble.innerHTML += `
+                            <button class="option-button" onclick="showConstanciaForm(true)">✅ Sí, tengo RFC e ID</button>
+                            <button class="option-button" onclick="showConstanciaForm(false)">❌ No tengo, usar CURP</button>
+                        `;
+                        currentStep = 'constancia_choice';
+                    }, 800);
+                }, 300);
+            } else if (service === 'acta') {
+                addMessage('Necesito un Acta de Nacimiento', true);
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        removeTyping();
+                        addMessage(
+                            '👶 Genial, puedo ayudarte. Tengo acceso a actas de nacimiento de todos los estados de México.\n\nSolo necesito tu CURP.',
+                            false,
+                            true
+                        );
+                        showActaForm();
+                        currentStep = 'acta_form';
+                    }, 800);
+                }, 300);
+            }
+        }
+
+        function showConstanciaForm(hasRFC) {
+            if (hasRFC) {
+                addMessage('Tengo RFC e ID', true);
+                formData.price = 60;
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        removeTyping();
+                        const messagesDiv = document.getElementById('messages');
+                        const messageDiv = document.createElement('div');
+                        messageDiv.className = 'message ai';
+                        
+                        const bubble = document.createElement('div');
+                        bubble.className = 'bubble';
+                        bubble.innerHTML = `
+                            Por favor, completa el formulario:
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label>RFC:</label>
+                                    <input type="text" id="rfc" placeholder="Ej: ABC123456XYZ" maxlength="13">
+                                </div>
+                                <div class="form-group">
+                                    <label>ID/CIF (foto o número):</label>
+                                    <input type="text" id="idcif" placeholder="Ej: A12345678">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono WhatsApp:</label>
+                                    <input type="tel" id="phone" placeholder="+52 1234567890">
+                                </div>
+                                <button class="option-button" style="background: #25D366; color: white; border-color: #25D366;" onclick="submitConstanciaForm()">Continuar</button>
+                            </div>
+                        `;
+                        messageDiv.appendChild(bubble);
+                        messagesDiv.appendChild(messageDiv);
+                        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                        currentStep = 'constancia_form';
+                    }, 800);
+                }, 300);
+            } else {
+                addMessage('No tengo RFC e ID, prefiero usar CURP', true);
+                formData.price = 90;
+                setTimeout(() => {
+                    showTyping();
+                    setTimeout(() => {
+                        removeTyping();
+                        addMessage(
+                            '⚠️ Entendido. Por usar CURP en lugar de RFC e ID, el precio se incrementa a <span class="price-highlight">$90</span>\n\nPor favor, proporciona tu CURP:',
+                            false,
+                            true
+                        );
+                        const messagesDiv = document.getElementById('messages');
+                        const lastBubble = messagesDiv.lastChild.querySelector('.bubble');
+                        lastBubble.innerHTML += `
+                            <div class="form-section">
+                                <div class="form-group">
+                                    <label>CURP:</label>
+                                    <input type="text" id="curp" placeholder="Ej: ABCD123456HDFMNN01" maxlength="18">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono WhatsApp:</label>
+                                    <input type="tel" id="phone" placeholder="+52 1234567890">
+                                </div>
+                                <button class="option-button" style="background: #25D366; color: white; border-color: #25D366;" onclick="submitCurpConstanciaForm()">Continuar</button>
+                            </div>
+                        `;
+                        currentStep = 'constancia_curp_form';
+                    }, 800);
+                }, 300);
+            }
+        }
+
+        function showActaForm() {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            formData.price = 45;
+            bubble.innerHTML = `
+                Por favor, completa el formulario:
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>CURP:</label>
+                        <input type="text" id="curp" placeholder="Ej: ABCD123456HDFMNN01" maxlength="18">
+                    </div>
+                    <div class="form-group">
+                        <label>Teléfono WhatsApp:</label>
+                        <input type="tel" id="phone" placeholder="+52 1234567890">
+                    </div>
+                    <button class="option-button" style="background: #25D366; color: white; border-color: #25D366;" onclick="submitActaForm()">Continuar</button>
+                </div>
+            `;
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function submitConstanciaForm() {
+            const rfc = document.getElementById('rfc').value.trim().toUpperCase();
+            const idcif = document.getElementById('idcif').value.trim().toUpperCase();
+            const phone = document.getElementById('phone').value.trim();
+
+            // Validación RFC (13 caracteres)
+            if (!rfc || rfc.length !== 13) {
+                alert('❌ RFC inválido. Debe tener 13 caracteres.');
+                return;
+            }
+
+            // Validación ID/CIF
+            if (!idcif || idcif.length < 5) {
+                alert('❌ ID/CIF inválido. Verifica que sea correcto.');
+                return;
+            }
+
+            // Validación teléfono
+            if (!phone || phone.length < 10) {
+                alert('❌ Teléfono inválido. Debe tener al menos 10 dígitos.');
+                return;
+            }
+
+            formData.rfc = rfc;
+            formData.idcif = idcif;
+            formData.phone = phone;
+
+            addMessage(`✅ RFC: ${rfc}\n✅ ID/CIF: ${idcif}\n✅ Teléfono: ${phone}`, true);
+            setTimeout(() => {
+                showPaymentForm();
+            }, 500);
+        }
+
+        function submitCurpConstanciaForm() {
+            const curp = document.getElementById('curp').value.trim().toUpperCase();
+            const phone = document.getElementById('phone').value.trim();
+
+            // Validación CURP (18 caracteres)
+            if (!curp || curp.length !== 18) {
+                alert('❌ CURP inválido. Debe tener exactamente 18 caracteres.');
+                return;
+            }
+
+            // Validación teléfono
+            if (!phone || phone.length < 10) {
+                alert('❌ Teléfono inválido. Debe tener al menos 10 dígitos.');
+                return;
+            }
+
+            formData.curp = curp;
+            formData.phone = phone;
+
+            addMessage(`✅ CURP: ${curp}\n✅ Teléfono: ${phone}`, true);
+            setTimeout(() => {
+                showPaymentForm();
+            }, 500);
+        }
+
+        function submitActaForm() {
+            const curp = document.getElementById('curp').value.trim().toUpperCase();
+            const phone = document.getElementById('phone').value.trim();
+
+            // Validación CURP (18 caracteres)
+            if (!curp || curp.length !== 18) {
+                alert('❌ CURP inválido. Debe tener exactamente 18 caracteres.');
+                return;
+            }
+
+            // Validación teléfono
+            if (!phone || phone.length < 10) {
+                alert('❌ Teléfono inválido. Debe tener al menos 10 dígitos.');
+                return;
+            }
+
+            formData.curp = curp;
+            formData.phone = phone;
+
+            addMessage(`✅ CURP: ${curp}\n✅ Teléfono: ${phone}`, true);
+            setTimeout(() => {
+                showPaymentForm();
+            }, 500);
+        }
+
+        function showPaymentForm() {
+            showTyping();
+            setTimeout(() => {
+                removeTyping();
+                const messagesDiv = document.getElementById('messages');
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ai';
+                
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                
+                // Construir resumen de la orden
+                const serviceLabel = selectedService === 'constancia' ? '📄 Constancia de Situación Fiscal' : '👶 Acta de Nacimiento';
+                const docInfo = formData.rfc ? `RFC: ${formData.rfc}` : `CURP: ${formData.curp}`;
+                const additionalInfo = formData.idcif ? `<div class="summary-item"><span class="label">ID/CIF:</span><span class="value">${formData.idcif}</span></div>` : '';
+                
+                bubble.innerHTML = `
+                    <div class="step-indicator">
+                        <div class="step completed">
+                            <div class="step-number">✓</div>
+                            <span>Datos</span>
+                        </div>
+                        <div class="step active">
+                            <div class="step-number">2</div>
+                            <span>Pago</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">3</div>
+                            <span>Comprobante</span>
+                        </div>
+                        <div class="step">
+                            <div class="step-number">4</div>
+                            <span>Confirmación</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 50%;"></div>
+                    </div>
+
+                    <div class="order-summary">
+                        <div class="summary-title">📋 Resumen de tu Orden</div>
+                        <div class="summary-item">
+                            <span class="label">Servicio:</span>
+                            <span class="value">${serviceLabel}</span>
+                        </div>
+                        <div class="summary-item">
+                            <span class="label">${formData.rfc ? 'RFC' : 'CURP'}:</span>
+                            <span class="value">${docInfo.split(': ')[1]}</span>
+                        </div>
+                        ${additionalInfo}
+                        <div class="summary-item">
+                            <span class="label">Teléfono:</span>
+                            <span class="value">${formData.phone}</span>
+                        </div>
+                        <div class="summary-item" style="margin-top: 8px; padding-top: 8px; border-top: 2px solid #25D366; font-weight: 600;">
+                            <span class="label">Total a Pagar:</span>
+                            <span class="value" style="color: #25D366; font-size: 16px;">$${formData.price}.00</span>
+                        </div>
+                    </div>
+
+                    ✅ Datos confirmados. Ahora realiza el pago.
+                    <div class="payment-section">
+                        <div class="payment-title">💳 Información de Pago</div>
+                        
+                        <div class="payment-info">
+                            <div>
+                                <span class="label">Monto a pagar:</span>
+                                <span class="value">$${formData.price}.00 MXN</span>
+                            </div>
+                        </div>
+
+                        <div class="payment-info">
+                            <div style="flex-direction: column; align-items: flex-start;">
+                                <span class="label">CLABE:</span>
+                                <div class="clabe">7309 6900 0006 5189 52</div>
+                            </div>
+                        </div>
+
+                        <div class="payment-info">
+                            <div>
+                                <span class="label">Nombre:</span>
+                            </div>
+                            <div style="justify-content: flex-start; padding: 8px 0;">
+                                PAUL DAVID MARQUEZ ELVIRA
+                            </div>
+                        </div>
+
+                        <div class="payment-info">
+                            <div>
+                                <span class="label">Banco:</span>
+                                <span class="value">CLIP</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-top: 16px;">
+                            <p style="font-size: 12px; color: #666; margin-bottom: 8px;">📸 Sube el comprobante de pago:</p>
+                            <div class="upload-section" onclick="document.getElementById('paymentFile').click()">
+                                <p>Click aquí para subir imagen</p>
+                                <input type="file" id="paymentFile" accept="image/*" onchange="handleFileUpload(event)">
+                            </div>
+                            <div id="fileStatus"></div>
+                        </div>
+
+                        <button class="option-button" style="background: #25D366; color: white; border-color: #25D366; margin-top: 16px;" onclick="submitPayment()">Enviar Comprobante y Datos</button>
+                    </div>
+                `;
+                messageDiv.appendChild(bubble);
+                messagesDiv.appendChild(messageDiv);
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+                currentStep = 'payment';
+            }, 800);
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const status = document.getElementById('fileStatus');
+            
+            if (file) {
+                // Validar tamaño (máx 5MB)
+                if (file.size > 5 * 1024 * 1024) {
+                    status.innerHTML = '<div class="error-message">❌ Archivo muy grande. Máximo 5MB.</div>';
+                    return;
+                }
+
+                // Validar tipo
+                if (!file.type.startsWith('image/')) {
+                    status.innerHTML = '<div class="error-message">❌ Solo se aceptan imágenes (JPG, PNG, GIF).</div>';
+                    return;
+                }
+
+                status.innerHTML = '<div style="text-align: center;"><div class="spinner"></div> <span style="margin-left: 8px;">Procesando imagen...</span></div>';
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    formData.paymentImage = e.target.result;
+                    status.innerHTML = '<div class="file-uploaded">✅ Imagen cargada correctamente</div>';
+                };
+                reader.onerror = function() {
+                    status.innerHTML = '<div class="error-message">❌ Error al cargar la imagen. Intenta de nuevo.</div>';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function submitPayment() {
+            if (!formData.paymentImage) {
+                alert('❌ Por favor, sube una imagen del comprobante de pago');
+                return;
+            }
+
+            // Validación final
+            const requiredFields = selectedService === 'constancia' 
+                ? [formData.rfc || formData.curp, formData.phone, formData.paymentImage]
+                : [formData.curp, formData.phone, formData.paymentImage];
+
+            if (requiredFields.some(f => !f)) {
+                alert('❌ Faltan datos. Por favor revisa el formulario.');
+                return;
+            }
+
+            // Crear objeto de orden
+            const order = {
+                id: 'ORD-' + Date.now(),
+                service: selectedService,
+                formData: {
+                    rfc: formData.rfc,
+                    curp: formData.curp,
+                    idcif: formData.idcif,
+                    phone: formData.phone
+                },
+                price: formData.price,
+                paymentImage: formData.paymentImage,
+                status: 'pendiente',
+                timestamp: new Date().toLocaleString(),
+                downloadLink: null
+            };
+
+            // Guardar en localStorage
+            let orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            orders.push(order);
+            localStorage.setItem('orders', JSON.stringify(orders));
+
+            // Sincronizar con Firebase
+            syncOrderWithFirebase(order);
+
+            addMessage('✅ Comprobante enviado', true);
+            
+            setTimeout(() => {
+                showTyping();
+                setTimeout(() => {
+                    removeTyping();
+                    const serviceLabel = selectedService === 'constancia' ? '📄 Constancia de Situación Fiscal' : '👶 Acta de Nacimiento';
+                    
+                    addMessage(
+                        `✅ ¡Perfecto! Tu solicitud ha sido recibida.\n\n📋 Número de orden: <strong>${order.id}</strong>\n📦 Trámite: ${serviceLabel}\n💵 Monto: $${formData.price}.00\n📞 Teléfono: ${formData.phone}\n⏱️ Tiempo de procesamiento: 10-15 minutos\n\n⚠️ Conserva tu número de orden. Te contactaremos por WhatsApp cuando esté listo.`,
+                        false,
+                        true
+                    );
+                    
+                    // Agregar botones de descarga
+                    const messagesDiv = document.getElementById('messages');
+                    const lastMessage = messagesDiv.lastChild;
+                    const lastBubble = lastMessage.querySelector('.bubble');
+                    lastBubble.innerHTML += `
+                        <button class="option-button" style="margin-top: 12px;" onclick="downloadOrderReceipt('${order.id}', '${serviceLabel}', ${formData.price})">📥 Descargar Comprobante</button>
+                        <button class="option-button" onclick="location.reload()">📋 Realizar otro trámite</button>
+                    `;
+                    
+                    currentStep = 'confirmado';
+                }, 1000);
+            }, 500);
+        }
+
+        function updateOrderStatus(orderId, status) {
+            const tracking = document.getElementById('orderTracking-' + orderId);
+            if (!tracking) return;
+
+            if (status === 'en_proceso') {
+                tracking.innerHTML = `
+                    <div class="order-tracking">
+                        <div class="tracking-title">
+                            <span class="real-time-indicator"></span>
+                            📦 Rastreador de Orden
+                        </div>
+                        <div class="tracking-status">
+                            <div class="status-dot">
+                                <div class="dot completed">✓</div>
+                                <div class="dot-label">Enviado</div>
+                            </div>
+                            <div class="status-dot">
+                                <div class="dot completed">✓</div>
+                                <div class="dot-label">En Verificación</div>
+                            </div>
+                            <div class="status-dot">
+                                <div class="dot active">3</div>
+                                <div class="dot-label">Procesando</div>
+                            </div>
+                        </div>
+                        <div class="tracking-info">
+                            ⏳ Tu documento se está procesando. Pronto recibirás un mensaje por WhatsApp.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function downloadOrderReceipt(orderId, service, price) {
+            const timestamp = new Date().toLocaleString();
+            const receipt = `
+COMPROBANTE DE SOLICITUD DE TRÁMITE
+====================================
+Número de Orden: ${orderId}
+Fecha: ${timestamp}
+
+TRÁMITE SOLICITADO
+${service}
+
+DATOS DE CONTACTO
+Teléfono: ${formData.phone}
+
+INFORMACIÓN DE PAGO
+Monto: $${price}.00 MXN
+CLABE: 7309 6900 0006 5189 52
+Beneficiario: PAUL DAVID MARQUEZ ELVIRA
+Banco: CLIP
+
+ESTADO DE TU SOLICITUD
+Estado: ⏳ Pendiente de Verificación
+Próximo paso: Te contactaremos por WhatsApp
+
+INSTRUCCIONES
+1. Guarda este comprobante
+2. Tu número de orden es: ${orderId}
+3. Úsalo si necesitas hacer consultas
+4. Te contactaremos al teléfono registrado
+
+Gracias por usar nuestro servicio.
+            `;
+
+            const blob = new Blob([receipt], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Comprobante-${orderId}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('input');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            addMessage(message, true);
+            input.value = '';
+            
+            setTimeout(() => {
+                showTyping();
+                setTimeout(() => {
+                    removeTyping();
+                    const responses = [
+                        '¿En qué puedo ayudarte con tus trámites?',
+                        'Entendido, ¿necesitas constancia fiscal o acta de nacimiento?',
+                        'Claro, estoy listo para ayudarte.'
+                    ];
+                    const response = responses[Math.floor(Math.random() * responses.length)];
+                    addMessage(response, false);
+                }, 800);
+            }, 300);
+        }
+
+        document.getElementById('input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // ==================== MEJORA 1: BOTÓN DE SOPORTE FLOTANTE ====================
+        function toggleSupportTooltip() {
+            const tooltip = document.getElementById('supportTooltip');
+            tooltip.classList.toggle('show');
+            
+            // Abrir WhatsApp después de 500ms
+            setTimeout(() => {
+                window.open('https://wa.me/525647385519?text=Hola, tengo una duda sobre mis trámites. Número de orden: ', '_blank');
+            }, 500);
+        }
+
+        // ==================== MEJORA 2: RASTREADOR EN TIEMPO REAL ====================
+        function showOrderTracking(orderId) {
+            const messagesDiv = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai';
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            bubble.id = 'orderTracking-' + orderId;
+            bubble.innerHTML = `
+                <div class="order-tracking">
+                    <div class="tracking-title">
+                        <span class="real-time-indicator"></span>
+                        📦 Rastreador de Orden en Tiempo Real
+                    </div>
+                    <div class="tracking-status">
+                        <div class="status-dot">
+                            <div class="dot completed">✓</div>
+                            <div class="dot-label">Enviado</div>
+                        </div>
+                        <div class="status-dot">
+                            <div class="dot active">2</div>
+                            <div class="dot-label">Verificación</div>
+                        </div>
+                        <div class="status-dot">
+                            <div class="dot">3</div>
+                            <div class="dot-label">Entrega</div>
+                        </div>
+                    </div>
+                    <div class="tracking-info">
+                        Tu documento será entregado en las próximas 2 horas
+                    </div>
+                </div>
+            `;
+            messageDiv.appendChild(bubble);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        // ==================== MEJORA 3: SINCRONIZACIÓN CON FIREBASE ====================
+        function syncOrderWithFirebase(order) {
+            // Enviar a Firebase Realtime Database
+            try {
+                db.ref('orders/' + order.id).set({
+                    id: order.id,
+                    service: order.service,
+                    formData: {
+                        rfc: order.formData.rfc,
+                        curp: order.formData.curp,
+                        idcif: order.formData.idcif,
+                        phone: order.formData.phone
+                    },
+                    price: order.price,
+                    status: 'pendiente',
+                    timestamp: order.timestamp,
+                    downloadLink: null
+                }).then(() => {
+                    console.log('✅ Orden sincronizada con Firebase: ' + order.id);
+                }).catch((error) => {
+                    console.error('⚠️ Error Firebase:', error.message);
+                    console.log('Orden guardada en localStorage como respaldo');
+                });
+            } catch(e) {
+                console.log('⚠️ Firebase no disponible, usando localStorage');
+            }
+        }
+
+        // Iniciar chat
+        initChat();
+        document.getElementById('input').focus();
+    </script>
+</body>
+</html>
