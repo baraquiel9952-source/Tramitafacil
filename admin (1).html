@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Administrador</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #25D366;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #25D366;
+            border-bottom-color: #25D366;
+        }
+
+        .tab:hover {
+            color: #333;
+        }
+
+        .orders-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .order-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            transition: all 0.3s;
+        }
+
+        .order-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .order-header {
+            background: linear-gradient(135deg, #f5f5f5 0%, #efefef 100%);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .order-id {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .order-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pendiente {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-pagado {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-entregado {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .order-body {
+            padding: 20px;
+        }
+
+        .order-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .info-item {
+            font-size: 13px;
+        }
+
+        .info-label {
+            color: #999;
+            font-weight: 500;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .info-value {
+            color: #333;
+            word-break: break-all;
+        }
+
+        .payment-image {
+            background: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .payment-image img {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn:hover {
+            background: #f5f5f5;
+            border-color: #bbb;
+        }
+
+        .btn-primary {
+            background: #25D366;
+            color: white;
+            border-color: #25D366;
+        }
+
+        .btn-primary:hover {
+            background: #1fad54;
+            border-color: #1fad54;
+        }
+
+        .btn-success {
+            background: #4caf50;
+            color: white;
+            border-color: #4caf50;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #25D366;
+            box-shadow: 0 0 0 2px #25D36630;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .modal-actions button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .modal-actions .cancel {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-actions .confirm {
+            background: #25D366;
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            font-size: 13px;
+        }
+
+        .price {
+            color: #25D366;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .copy-btn {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-left: 4px;
+        }
+
+        .copy-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .search-section {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .search-container input {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .search-container button {
+            padding: 10px 16px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .search-container button:hover {
+            background: #1fad54;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-export {
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-export:hover {
+            background: #e0e0e0;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #25D366;
+            color: white;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+            max-width: 400px;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification.hidden {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        @keyframes slideOut {
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .audit-log {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+
+        .audit-item {
+            padding: 6px 0;
+            border-bottom: 1px solid #e0e0e0;
+            color: #666;
+        }
+
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+
+        .audit-time {
+            color: #999;
+            font-weight: 500;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .result-count {
+            font-size: 12px;
+            color: #666;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>🔐 Panel de Control</h1>
+                <p>Gestión de pedidos y pagos</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 14px; opacity: 0.9;">Última actualización: <span id="lastUpdate">-</span></div>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-label">Pedidos Pendientes</div>
+                <div class="stat-value" id="statPendiente">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Pagos Verificados</div>
+                <div class="stat-value" id="statPagado">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Entregas Completadas</div>
+                <div class="stat-value" id="statEntregado">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Ingresos Totales</div>
+                <div class="stat-value" id="statIngresos">$0</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('todos')">Todos los pedidos</button>
+            <button class="tab" onclick="switchTab('pendiente')">⏳ Pendientes</button>
+            <button class="tab" onclick="switchTab('pagado')">✅ Verificados</button>
+            <button class="tab" onclick="switchTab('entregado')">📦 Entregados</button>
+        </div>
+
+        <div class="search-section">
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Buscar por ID, CURP, RFC, teléfono..." onkeyup="performSearch()">
+                <button onclick="clearSearch()">🔄 Limpiar</button>
+            </div>
+            <div class="result-count" id="resultCount"></div>
+            <div class="export-buttons">
+                <button class="btn-export" onclick="exportToCSV()">📊 Exportar CSV</button>
+                <button class="btn-export" onclick="exportToJSON()">📋 Exportar JSON</button>
+            </div>
+        </div>
+
+        <div id="notification"></div>
+
+        <div class="orders-list" id="ordersList"></div>
+    </div>
+
+    <!-- Modal para ver imagen de pago -->
+    <div class="modal" id="imageModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Comprobante de Pago</span>
+                <button class="close-btn" onclick="closeModal('imageModal')">&times;</button>
+            </div>
+            <img id="modalImage" class="image-preview" src="" alt="Comprobante">
+        </div>
+    </div>
+
+    <!-- Modal para generar link de descarga -->
+    <div class="modal" id="downloadModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span>Generar Link de Descarga</span>
+                <button class="close-btn" onclick="closeModal('downloadModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>Link de descarga del documento:</label>
+                <input type="text" id="downloadLink" placeholder="https://ejemplo.com/documento.pdf" value="">
+            </div>
+            <p style="font-size: 12px; color: #999; margin-bottom: 16px;">
+                📱 Este link será enviado al cliente por <strong>WhatsApp</strong>
+            </p>
+            <div class="modal-actions">
+                <button class="cancel" onclick="closeModal('downloadModal')">Cancelar</button>
+                <button class="confirm" onclick="saveDownloadLink()">📲 Enviar por WhatsApp</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'todos';
+        let currentOrderId = null;
+        let currentOrderPhone = null;
+        let searchTerm = '';
+        let lastOrderCount = 0;
+
+        // Cargar datos al inicio
+        updateStats();
+        renderOrders();
+
+        // Actualizar cada 5 segundos
+        setInterval(() => {
+            updateStats();
+            renderOrders();
+            checkForNewOrders();
+        }, 5000);
+
+        function updateStats() {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            
+            const statPendiente = orders.filter(o => o.status === 'pendiente').length;
+            const statPagado = orders.filter(o => o.status === 'pagado').length;
+            const statEntregado = orders.filter(o => o.status === 'entregado').length;
+            const statIngresos = orders
+                .filter(o => o.status === 'entregado')
+                .reduce((sum, o) => sum + o.price, 0);
+
+            document.getElementById('statPendiente').textContent = statPendiente;
+            document.getElementById('statPagado').textContent = statPagado;
+            document.getElementById('statEntregado').textContent = statEntregado;
+            document.getElementById('statIngresos').textContent = '$' + statIngresos.toLocaleString();
+
+            document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderOrders();
+        }
+
+        function getFilteredOrders() {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            let filtered = orders;
+
+            // Aplicar filtro de tab
+            if (currentTab !== 'todos') {
+                filtered = filtered.filter(o => o.status === currentTab);
+            }
+
+            // Aplicar búsqueda
+            if (searchTerm) {
+                filtered = filtered.filter(o => {
+                    const searchableText = `${o.id} ${o.formData.rfc || ''} ${o.formData.curp || ''} ${o.formData.phone || ''} ${o.service}`.toLowerCase();
+                    return searchableText.includes(searchTerm);
+                });
+            }
+
+            return filtered.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        }
+
+        function renderOrders() {
+            const filtered = getFilteredOrders();
+            const ordersList = document.getElementById('ordersList');
+
+            // Mostrar contador de resultados
+            const resultCount = document.getElementById('resultCount');
+            if (searchTerm) {
+                resultCount.textContent = `🔍 ${filtered.length} resultado(s) encontrado(s)`;
+            } else {
+                resultCount.textContent = '';
+            }
+
+            if (filtered.length === 0) {
+                ordersList.innerHTML = `
+                    <div class="no-results">
+                        <p>📭 No hay pedidos ${searchTerm ? 'que coincidan con la búsqueda' : 'en esta categoría'}</p>
+                    </div>
+                `;
+                return;
+            }
+
+            ordersList.innerHTML = filtered.map(order => {
+                const serviceLabel = order.service === 'constancia' ? '📄 Constancia de Situación Fiscal' : '👶 Acta de Nacimiento';
+                const clientInfo = order.formData.rfc || order.formData.curp;
+                const auditLog = renderAuditLog(order.id);
+                
+                return `
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div>
+                                <div class="order-id">${order.id}</div>
+                                <div style="font-size: 12px; color: #999; margin-top: 4px;">${order.timestamp}</div>
+                            </div>
+                            <div class="order-status status-${order.status}">${order.status.toUpperCase()}</div>
+                        </div>
+                        <div class="order-body">
+                            <div class="order-info">
+                                <div class="info-item">
+                                    <div class="info-label">Servicio</div>
+                                    <div class="info-value">${serviceLabel}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Monto</div>
+                                    <div class="info-value price">$${order.price}.00</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">Teléfono WhatsApp</div>
+                                    <div class="info-value">${order.formData.phone}</div>
+                                </div>
+                                <div class="info-item">
+                                    <div class="info-label">${order.formData.rfc ? 'RFC' : 'CURP'}</div>
+                                    <div class="info-value">${order.formData.rfc || order.formData.curp}</div>
+                                </div>
+                                ${order.formData.idcif ? `
+                                    <div class="info-item">
+                                        <div class="info-label">ID/CIF</div>
+                                        <div class="info-value">${order.formData.idcif}</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+
+                            <div class="payment-image">
+                                <div style="font-size: 12px; color: #999; margin-bottom: 8px;">Comprobante de Pago:</div>
+                                <img src="${order.paymentImage}" alt="Comprobante" onclick="openImageModal('${order.paymentImage}')" style="cursor: pointer; max-width: 100%; max-height: 300px; border-radius: 6px;">
+                            </div>
+
+                            ${order.downloadLink ? `
+                                <div class="success-msg">
+                                    ✅ Entregado por WhatsApp: <br>
+                                    <code>${order.downloadLink}</code>
+                                    <button class="copy-btn" onclick="copyToClipboard('${order.downloadLink}')">Copiar</button>
+                                    <button class="copy-btn" onclick="openWhatsAppDirect('${order.formData.phone}', '${order.downloadLink}', '${order.id}')">📱 Abrir WhatsApp</button>
+                                </div>
+                            ` : ''}
+
+                            ${auditLog}
+
+                            <div class="actions">
+                                ${order.status === 'pendiente' ? `
+                                    <button class="btn btn-success" onclick="verifyPayment('${order.id}')">✅ Verificar Pago</button>
+                                ` : ''}
+                                ${order.status === 'pagado' ? `
+                                    <button class="btn btn-primary" onclick="generateDownloadLink('${order.id}', '${order.formData.phone}')">📥 Generar Link Descarga</button>
+                                ` : ''}
+                                <button class="btn" onclick="deleteOrder('${order.id}')">🗑️ Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openImageModal(imageSrc) {
+            const modal = document.getElementById('imageModal');
+            document.getElementById('modalImage').src = imageSrc;
+            modal.classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+            currentOrderId = null;
+        }
+
+        function verifyPayment(orderId) {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const order = orders.find(o => o.id === orderId);
+            
+            if (order) {
+                order.status = 'pagado';
+                localStorage.setItem('orders', JSON.stringify(orders));
+                
+                // Agregar a auditoría
+                addAuditLog(orderId, 'Pago Verificado', `Monto: $${order.price}.00`);
+                
+                showNotification(`✅ Pago verificado para ${orderId}`);
+                updateStats();
+                renderOrders();
+            }
+        }
+
+        function generateDownloadLink(orderId, phone) {
+            currentOrderId = orderId;
+            currentOrderPhone = phone;
+            document.getElementById('downloadLink').value = '';
+            document.getElementById('downloadModal').classList.add('active');
+        }
+
+        function saveDownloadLink() {
+            const link = document.getElementById('downloadLink').value.trim();
+            
+            if (!link) {
+                alert('Por favor, ingresa un link de descarga válido');
+                return;
+            }
+
+            if (!link.startsWith('http')) {
+                alert('El link debe comenzar con http:// o https://');
+                return;
+            }
+
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const order = orders.find(o => o.id === currentOrderId);
+            
+            if (order) {
+                order.status = 'entregado';
+                order.downloadLink = link;
+                localStorage.setItem('orders', JSON.stringify(orders));
+                
+                // Agregar a auditoría
+                addAuditLog(currentOrderId, 'Documento Entregado por WhatsApp', `Link: ${link}`);
+                
+                // Crear mensaje de WhatsApp
+                const whatsappMessage = `¡Hola! 👋\n\nTu documento está listo.\n\n📄 Número de orden: ${currentOrderId}\n\n📥 Descarga aquí: ${link}\n\n¡Gracias por usar nuestro servicio! 😊`;
+                const whatsappLink = `https://wa.me/${currentOrderPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(whatsappMessage)}`;
+                
+                // Mostrar opción de abrir WhatsApp
+                const confirmSend = confirm(`
+✅ Link guardado correctamente
+
+📱 ¿Deseas abrir WhatsApp ahora para enviar el mensaje?
+
+Teléfono: ${currentOrderPhone}
+`);
+
+                if (confirmSend) {
+                    window.open(whatsappLink, '_blank');
+                }
+                
+                showNotification(`✅ Link enviado por WhatsApp a ${currentOrderPhone}`);
+                closeModal('downloadModal');
+                updateStats();
+                renderOrders();
+            }
+        }
+
+        function deleteOrder(orderId) {
+            if (confirm('¿Estás seguro de que deseas eliminar este pedido?')) {
+                const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+                const filtered = orders.filter(o => o.id !== orderId);
+                localStorage.setItem('orders', JSON.stringify(filtered));
+                
+                // Agregar a auditoría (aunque se elimine)
+                addAuditLog(orderId, 'Pedido Eliminado', 'Eliminado del sistema');
+                
+                showNotification(`🗑️ Pedido ${orderId} eliminado`);
+                updateStats();
+                renderOrders();
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            alert('Link copiado al portapapeles');
+        }
+
+        function openWhatsAppDirect(phone, link, orderId) {
+            const whatsappMessage = `¡Hola! 👋\n\nTu documento está listo.\n\n📄 Número de orden: ${orderId}\n\n📥 Descarga aquí: ${link}\n\n¡Gracias por usar nuestro servicio! 😊`;
+            const phoneNumber = phone.replace(/[^0-9]/g, '');
+            const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+            window.open(whatsappLink, '_blank');
+        }
+
+        // ==================== MEJORA 1: BÚSQUEDA AVANZADA ====================
+        function performSearch() {
+            searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            renderOrders();
+        }
+
+        function clearSearch() {
+            searchTerm = '';
+            document.getElementById('searchInput').value = '';
+            renderOrders();
+        }
+
+        // ==================== MEJORA 2: NOTIFICACIONES ====================
+        function checkForNewOrders() {
+            const orders = JSON.parse(localStorage.getItem('orders') || '[]');
+            const currentCount = orders.length;
+
+            if (currentCount > lastOrderCount && lastOrderCount > 0) {
+                const newOrders = currentCount - lastOrderCount;
+                showNotification(`🔔 ¡Nueva orden recibida! (+${newOrders})`);
+            }
+            lastOrderCount = currentCount;
+        }
+
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `<div class="notification" id="notifContent">${message}</div>`;
+            setTimeout(() => {
+                const notif = document.getElementById('notifContent');
+                if (notif) {
+                    notif.classList.add('hidden');
+                    setTimeout(() => notification.innerHTML = '', 300);
+                }
+            }, 4000);
+        }
+
+        // ==================== MEJORA 3: EXPORTAR DATOS ====================
+        function exportToCSV() {
+            const orders = getFilteredOrders();
+            
+            if (orders.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let csv = 'ID,SERVICIO,RFC,CURP,IDCIF,TELÉFONO,MONTO,ESTADO,FECHA,LINK\n';
+            
+            orders.forEach(order => {
+                const service = order.service === 'constancia' ? 'Constancia Fiscal' : 'Acta Nacimiento';
+                const rfc = order.formData.rfc || '-';
+                const curp = order.formData.curp || '-';
+                const idcif = order.formData.idcif || '-';
+                const link = order.downloadLink || '-';
+                
+                csv += `"${order.id}","${service}","${rfc}","${curp}","${idcif}","${order.formData.phone}","$${order.price}","${order.status}","${order.timestamp}","${link}"\n`;
+            });
+
+            descargarArchivo(csv, `ordenes-${new Date().getTime()}.csv`, 'text/csv');
+            showNotification('✅ Archivo CSV exportado correctamente');
+        }
+
+        function exportToJSON() {
+            const orders = getFilteredOrders();
+            
+            if (orders.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            const jsonData = JSON.stringify(orders, null, 2);
+            descargarArchivo(jsonData, `ordenes-${new Date().getTime()}.json`, 'application/json');
+            showNotification('✅ Archivo JSON exportado correctamente');
+        }
+
+        function descargarArchivo(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        // ==================== MEJORA 4: HISTORIAL CON AUDITORÍA ====================
+        function addAuditLog(orderId, action, details = '') {
+            let auditLogs = JSON.parse(localStorage.getItem('auditLogs') || '{}');
+            
+            if (!auditLogs[orderId]) {
+                auditLogs[orderId] = [];
+            }
+
+            auditLogs[orderId].push({
+                timestamp: new Date().toLocaleString(),
+                action: action,
+                details: details,
+                user: 'Admin'
+            });
+
+            localStorage.setItem('auditLogs', JSON.stringify(auditLogs));
+        }
+
+        function getAuditLog(orderId) {
+            const auditLogs = JSON.parse(localStorage.getItem('auditLogs') || '{}');
+            return auditLogs[orderId] || [];
+        }
+
+        function renderAuditLog(orderId) {
+            const logs = getAuditLog(orderId);
+            
+            if (logs.length === 0) return '';
+
+            let html = '<div class="audit-log"><strong>📋 Historial:</strong>';
+            logs.forEach(log => {
+                html += `<div class="audit-item"><span class="audit-time">${log.timestamp}</span> - ${log.action}${log.details ? ': ' + log.details : ''}</div>`;
+            });
+            html += '</div>';
+            
+            return html;
+        }
+        
+        // Cerrar modal al hacer click fuera
+        document.getElementById('imageModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal('imageModal');
+        });
+
+        document.getElementById('downloadModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal('downloadModal');
+        });
+    </script>
+</body>
+</html>
